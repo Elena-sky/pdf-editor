@@ -12,6 +12,9 @@ RUN npm run build
 # ── Stage 2: serve via nginx ─────────────────────────────────────
 FROM nginx:1.25-alpine
 
+# Default nginx mime.types lists only .js, not .mjs — browser rejects pdf.js worker as a module
+RUN sed -i 's/\(application\/javascript[[:space:]]*\)js;$/\1js mjs;/' /etc/nginx/mime.types
+
 # Remove default config
 RUN rm /etc/nginx/conf.d/default.conf
 

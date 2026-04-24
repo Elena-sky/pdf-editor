@@ -5,6 +5,18 @@ import PreviewModal from './components/PreviewModal';
 import styles from './App.module.css';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const DEFAULT_OUTPUT_NAME = 'merged';
+
+/**
+ * @param {string} raw
+ * @returns {string} filename ending in .pdf, safe for download
+ */
+function toDownloadFileName(raw) {
+  const trimmed = (raw || '').trim() || DEFAULT_OUTPUT_NAME;
+  const noIllegal = trimmed.replace(/[/\\?%*:|"<>]/g, '-').replace(/\0/g, '');
+  const base = (noIllegal || DEFAULT_OUTPUT_NAME).replace(/^\.+/, '') || DEFAULT_OUTPUT_NAME;
+  return base.toLowerCase().endsWith('.pdf') ? base : `${base}.pdf`;
+}
 
 export default function App() {
   const [files, setFiles] = useState([]);
@@ -12,6 +24,8 @@ export default function App() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
+  const [outputFileName, setOutputFileName] = useState(DEFAULT_OUTPUT_NAME);
+  const [lastDownloadName, setLastDownloadName] = useState(null);
 
   const addFiles = useCallback((newFiles) => {
     setError(null);
@@ -83,16 +97,18 @@ export default function App() {
       }
 
       const blob = await response.blob();
+      const downloadName = toDownloadFileName(outputFileName);
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'merged.pdf';
+      a.download = downloadName;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
 
+      setLastDownloadName(downloadName);
       setSuccess(true);
     } catch (err) {
       setError(err.message);
@@ -120,6 +136,26 @@ export default function App() {
       <main className={styles.main}>
         <DropZone onFiles={addFiles} disabled={merging} />
 
+        <div className={styles.nameField}>
+          <label className={styles.nameLabel} htmlFor="output-file-name">
+            Output file name
+          </label>
+          <div className={styles.nameInputWrap}>
+            <input
+              id="output-file-name"
+              type="text"
+              className={styles.nameInput}
+              value={outputFileName}
+              onChange={(e) => setOutputFileName(e.target.value)}
+              disabled={merging}
+              autoComplete="off"
+              placeholder={DEFAULT_OUTPUT_NAME}
+              spellCheck="false"
+            />
+            <span className={styles.nameHint}>.pdf is added if omitted</span>
+          </div>
+        </div>
+
         {files.length > 0 && (
           <div className={styles.fileSection}>
             <div className={styles.fileSectionHeader}>
@@ -129,7 +165,13 @@ export default function App() {
               </div>
               <button
                 className={styles.clearBtn}
-                onClick={() => { setFiles([]); setError(null); setSuccess(false); }}
+                onClick={() => {
+                  setFiles([]);
+                  setError(null);
+                  setSuccess(false);
+                  setOutputFileName(DEFAULT_OUTPUT_NAME);
+                  setLastDownloadName(null);
+                }}
                 disabled={merging}
               >
                 Clear all
@@ -151,9 +193,9 @@ export default function App() {
               </div>
             )}
 
-            {success && (
+            {success && lastDownloadName && (
               <div className={styles.success}>
-                <span>✓</span> merged.pdf downloaded successfully!
+                <span>✓</span> {lastDownloadName} downloaded successfully!
               </div>
             )}
 

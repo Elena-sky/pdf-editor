@@ -1,16 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import styles from './PreviewModal.module.css';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
 let pdfjsLib = null;
 
 async function getPdfJs() {
   if (pdfjsLib) return pdfjsLib;
   pdfjsLib = await import('pdfjs-dist');
-  // Use the bundled worker
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
-    import.meta.url
-  ).href;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
   return pdfjsLib;
 }
 
@@ -21,6 +18,7 @@ export default function PreviewModal({ file, name, onClose }) {
   const [currentPage, setCurrentPage] = useState(0);
   const canvasRef = useRef(null);
   const pdfDocRef = useRef(null);
+  const renderTaskRef = useRef(null);
 
   // Load PDF document
   useEffect(() => {
@@ -51,33 +49,61 @@ export default function PreviewModal({ file, name, onClose }) {
     return () => { cancelled = true; };
   }, [file]);
 
-  // Render current page to canvas
+  // Render current page to canvas — cancel in-flight render when page changes
   useEffect(() => {
     if (!currentPage || !pdfDocRef.current || !canvasRef.current) return;
 
-    let cancelled = false;
+    const canvas = canvasRef.current;
+    let alive = true;
 
-    async function renderPage() {
+    const cancelOngoing = () => {
+      if (renderTaskRef.current) {
+        try {
+          renderTaskRef.current.cancel();
+        } catch {
+          // ignore
+        }
+        renderTaskRef.current = null;
+      }
+    };
+
+    const run = async () => {
       try {
+        cancelOngoing();
         const pdf = pdfDocRef.current;
         const page = await pdf.getPage(currentPage);
-        if (cancelled) return;
+        if (!alive) return;
 
         const viewport = page.getViewport({ scale: 1.4 });
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        if (!alive) return;
 
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
 
-        await page.render({ canvasContext: ctx, viewport }).promise;
+        const task = page.render({ canvasContext: ctx, viewport });
+        renderTaskRef.current = task;
+        try {
+          await task.promise;
+        } finally {
+          if (renderTaskRef.current === task) {
+            renderTaskRef.current = null;
+          }
+        }
       } catch (err) {
-        if (!cancelled) setError(err.message);
+        if (!alive) return;
+        if (err?.name === 'RenderingCancelledException' || err?.name === 'AbortError') {
+          return;
+        }
+        setError(err?.message || String(err));
       }
-    }
+    };
 
-    renderPage();
-    return () => { cancelled = true; };
+    run();
+    return () => {
+      alive = false;
+      cancelOngoing();
+    };
   }, [currentPage]);
 
   const prev = useCallback(() => setCurrentPage((p) => Math.max(1, p - 1)), []);

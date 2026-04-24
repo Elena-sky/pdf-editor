@@ -107,6 +107,52 @@
   font-size: 16px;
 }
 
+.nameField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.nameLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.nameInputWrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.nameInput {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-1);
+  color: var(--text);
+  outline: none;
+}
+.nameInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+}
+.nameInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nameHint {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 .success {
   display: flex;
   align-items: center;

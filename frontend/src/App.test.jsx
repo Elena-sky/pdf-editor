@@ -10,4 +10,9 @@ describe('App', () => {
       screen.getByText('Combine multiple PDF files into one — fast and private')
     ).toBeInTheDocument();
   });
+
+  it('shows output name with default merged', () => {
+    render(<App />);
+    expect(screen.getByLabelText('Output file name', { exact: true })).toHaveValue('merged');
+  });
 });
