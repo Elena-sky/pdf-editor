@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import styles from './DropZone.module.css';
 
-export default function DropZone({ onFiles, disabled }) {
+export default function DropZone({ onFiles, disabled, multiple = true, dropHint }) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
@@ -30,14 +30,14 @@ export default function DropZone({ onFiles, disabled }) {
     setDragging(false);
     if (disabled) return;
     const dropped = Array.from(e.dataTransfer.files);
-    if (dropped.length > 0) onFiles(dropped);
-  }, [onFiles, disabled]);
+    if (dropped.length > 0) onFiles(multiple ? dropped : dropped.slice(0, 1));
+  }, [onFiles, disabled, multiple]);
 
   const handleChange = useCallback((e) => {
     const selected = Array.from(e.target.files);
-    if (selected.length > 0) onFiles(selected);
+    if (selected.length > 0) onFiles(multiple ? selected : selected.slice(0, 1));
     e.target.value = '';
-  }, [onFiles]);
+  }, [onFiles, multiple]);
 
   return (
     <div
@@ -55,7 +55,7 @@ export default function DropZone({ onFiles, disabled }) {
         ref={inputRef}
         type="file"
         accept="application/pdf"
-        multiple
+        multiple={multiple}
         onChange={handleChange}
         style={{ display: 'none' }}
       />
@@ -64,9 +64,13 @@ export default function DropZone({ onFiles, disabled }) {
         {dragging ? '📂' : '📄'}
       </div>
       <p className={styles.text}>
-        {dragging
-          ? 'Drop PDFs here'
-          : 'Drag & drop PDFs here'}
+        {dropHint
+          ? dragging
+            ? 'Drop PDF here'
+            : dropHint
+          : dragging
+            ? 'Drop PDFs here'
+            : 'Drag & drop PDFs here'}
       </p>
       <p className={styles.sub}>or click to browse files</p>
       <div className={styles.badge}>PDF only · max 20 MB each</div>
