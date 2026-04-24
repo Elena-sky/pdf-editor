@@ -1,27 +1,8 @@
 const express = require('express');
-const multer = require('multer');
 const { PDFDocument } = require('pdf-lib');
+const { upload, MAX_FILES } = require('../middleware/upload');
 
 const router = express.Router();
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB per file
-const MAX_FILES = 20;
-
-const storage = multer.memoryStorage();
-
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: MAX_FILE_SIZE,
-    files: MAX_FILES,
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype !== 'application/pdf') {
-      return cb(new Error(`File "${file.originalname}" is not a PDF`));
-    }
-    cb(null, true);
-  },
-});
 
 /**
  * POST /api/merge-pdf

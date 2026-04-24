@@ -89,9 +89,11 @@
 .previewBtn {
   background: none;
   color: var(--text-secondary);
-  font-size: 16px;
-  padding: 4px 8px;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 .previewBtn:hover:not(:disabled) {
   color: var(--accent);
@@ -101,9 +103,10 @@
 .removeBtn {
   background: none;
   color: var(--text-secondary);
-  font-size: 14px;
-  padding: 4px 8px;
+  font-size: 13px;
+  padding: 4px 10px;
   border-radius: var(--radius-sm);
+  white-space: nowrap;
 }
 .removeBtn:hover:not(:disabled) {
   color: var(--danger);

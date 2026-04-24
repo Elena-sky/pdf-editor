@@ -57,20 +57,20 @@ export default function FileItem({ file, index, onRemove, onPreview, disabled })
       {/* Actions */}
       <div className={styles.actions}>
         <button
+          type="button"
           className={styles.previewBtn}
           onClick={() => onPreview(file)}
           disabled={disabled}
-          title="Preview"
         >
-          👁
+          Preview
         </button>
         <button
+          type="button"
           className={styles.removeBtn}
           onClick={() => onRemove(file.id)}
           disabled={disabled}
-          title="Remove"
         >
-          ✕
+          Remove
         </button>
       </div>
     </div>

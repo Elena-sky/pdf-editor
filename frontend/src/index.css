@@ -7,11 +7,9 @@
 :root {
   --bg: #0f0f13;
   --surface: #1a1a24;
+  --surface-1: #1a1a24;
   --surface-2: #22222e;
   --border: #2e2e40;
-  --accent: #6c63ff;
-  --accent-hover: #574fd6;
-  --accent-light: rgba(108, 99, 255, 0.15);
   --danger: #ff4d4f;
   --danger-light: rgba(255, 77, 79, 0.15);
   --success: #52c41a;
@@ -20,6 +18,46 @@
   --radius: 12px;
   --radius-sm: 8px;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+
+  --accent-merge: #6c63ff;
+  --accent-merge-hover: #574fd6;
+  --accent-merge-shadow: rgba(108, 99, 255, 0.3);
+  --accent-merge-shadow-strong: rgba(108, 99, 255, 0.4);
+  --accent-merge-focus: rgba(108, 99, 255, 0.2);
+  --accent-merge-light: rgba(108, 99, 255, 0.15);
+
+  --accent-extract: #14b8a6;
+  --accent-extract-hover: #0f9488;
+  --accent-extract-shadow: rgba(20, 184, 166, 0.3);
+  --accent-extract-shadow-strong: rgba(20, 184, 166, 0.4);
+  --accent-extract-focus: rgba(20, 184, 166, 0.2);
+  --accent-extract-light: rgba(20, 184, 166, 0.15);
+
+  /* default until a view sets data-mode */
+  --accent: var(--accent-merge);
+  --accent-hover: var(--accent-merge-hover);
+  --accent-shadow: var(--accent-merge-shadow);
+  --accent-shadow-strong: var(--accent-merge-shadow-strong);
+  --accent-focus: var(--accent-merge-focus);
+  --accent-light: var(--accent-merge-light);
+}
+
+[data-mode='merge'] {
+  --accent: var(--accent-merge);
+  --accent-hover: var(--accent-merge-hover);
+  --accent-shadow: var(--accent-merge-shadow);
+  --accent-shadow-strong: var(--accent-merge-shadow-strong);
+  --accent-focus: var(--accent-merge-focus);
+  --accent-light: var(--accent-merge-light);
+}
+
+[data-mode='extract'] {
+  --accent: var(--accent-extract);
+  --accent-hover: var(--accent-extract-hover);
+  --accent-shadow: var(--accent-extract-shadow);
+  --accent-shadow-strong: var(--accent-extract-shadow-strong);
+  --accent-focus: var(--accent-extract-focus);
+  --accent-light: var(--accent-extract-light);
 }
 
 body {

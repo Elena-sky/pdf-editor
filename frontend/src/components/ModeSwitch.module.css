@@ -1,0 +1,46 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  justify-content: center;
+}
+
+.tab {
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  /* по умолчанию (неактивные) — выглядит как кликабельные ссылки */
+  text-decoration: underline;
+  text-decoration-color: var(--text-secondary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: auto;
+  transition: background-color 150ms ease, color 150ms ease, text-decoration-color 150ms ease;
+}
+
+.tab[aria-selected="false"]:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+  text-decoration-color: var(--accent);
+}
+
+.isActive {
+  background: var(--accent);
+  color: white;
+  text-decoration-color: rgba(255, 255, 255, 0.9);
+}
+
+.isActive:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: white;
+  text-decoration-color: #fff;
+}
+
+.tab:disabled {
+  cursor: not-allowed;
+}

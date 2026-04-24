@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const mergeRouter = require('./routes/merge');
+const splitRouter = require('./routes/split');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +14,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api', mergeRouter);
+app.use('/api', splitRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'PDF Merger API is running' });
