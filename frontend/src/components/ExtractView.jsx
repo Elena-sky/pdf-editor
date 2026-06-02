@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import DropZone from './DropZone';
 import PreviewModal from './PreviewModal';
 import { toDownloadFileName, sanitizeStemForFileName } from '../utils/downloadFileName';
-import { MAX_FILE_SIZE, maxFileSizeLabel } from '../config/limits';
+import { validatePdfFileExtract } from '../utils/validatePdfFile';
+import { useUploadLimits } from '../hooks/useUploadLimits';
 import styles from './ExtractView.module.css';
 
 function formatSize(bytes) {
@@ -11,6 +12,7 @@ function formatSize(bytes) {
 }
 
 export default function ExtractView({ onExtractingChange }) {
+  const { maxFileSize, maxFileSizeLabel } = useUploadLimits();
   const [file, setFile] = useState(null);
   const [pageCount, setPageCount] = useState(null);
   const [from, setFrom] = useState(1);
@@ -60,12 +62,9 @@ export default function ExtractView({ onExtractingChange }) {
   const handleFile = useCallback(async (newFiles) => {
     const f = newFiles[0];
     if (!f) return;
-    if (f.type !== 'application/pdf') {
-      setError('Not a PDF');
-      return;
-    }
-    if (f.size > MAX_FILE_SIZE) {
-      setError(`File exceeds ${maxFileSizeLabel}`);
+    const check = validatePdfFileExtract(f, { maxFileSize, maxFileSizeLabel });
+    if (!check.ok) {
+      setError(check.error);
       return;
     }
 
@@ -103,7 +102,7 @@ export default function ExtractView({ onExtractingChange }) {
     } finally {
       setMetaLoading(false);
     }
-  }, []);
+  }, [maxFileSize, maxFileSizeLabel]);
 
   const removeFile = useCallback(() => {
     setFile(null);

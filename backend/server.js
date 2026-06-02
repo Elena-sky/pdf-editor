@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mergeRouter = require('./routes/merge');
 const splitRouter = require('./routes/split');
+const configRouter = require('./routes/config');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +14,7 @@ app.use(cors({
 
 app.use(express.json());
 
+app.use('/api', configRouter);
 app.use('/api', mergeRouter);
 app.use('/api', splitRouter);
 

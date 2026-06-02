@@ -19,11 +19,16 @@ All routes are under the same host as the app in production; in local dev the Vi
 
 | Method & path | Body | Response |
 |---------------|------|----------|
+| `GET /api/config` | — | `200` — JSON: `maxFileSizeMb`, `maxFiles`, `acceptedMime` |
 | `POST /api/merge-pdf` | `multipart/form-data`: `files` (2–20 PDFs), optional `order` (comma indices) | `200` — `application/pdf` |
 | `POST /api/preview-pdf` | `multipart/form-data`: `file` (one PDF) | `200` — JSON: `fileName`, `pageCount`, `fileSize` |
 | `POST /api/split-pdf` | `multipart/form-data`: `file` (one PDF), `from`, `to` (1-based inclusive integers) | `200` — `application/pdf` |
 
 Error responses: `400` / `422` / `500` with JSON `{ "error": "message" }` where applicable.
+
+OpenAPI description: [`docs/openapi.yaml`](docs/openapi.yaml).
+
+**Single source of truth:** the server enforces upload rules (multer + routes). The SPA reads `GET /api/config` at startup for UI labels and early client checks; build-time `VITE_*` env vars are the fallback if the config request fails.
 
 ---
 
@@ -41,7 +46,9 @@ Per-file upload limit is controlled by one variable on each tier (keep values in
 | Tier | Variable | Default |
 |------|----------|---------|
 | Backend | `MAX_FILE_SIZE_MB` | `100` |
-| Frontend (build) | `VITE_MAX_FILE_SIZE_MB` | `100` |
+| Backend | (merge cap) | `MAX_FILES` = 20 in [`backend/config/limits.js`](backend/config/limits.js) |
+| Frontend (build fallback) | `VITE_MAX_FILE_SIZE_MB` | `100` |
+| Frontend (build fallback) | `VITE_MAX_FILES` | `20` |
 | Nginx (Docker build) | `MAX_FILE_SIZE_MB` build arg | `100` (`client_max_body_size` = per-file limit × 20 files) |
 
 Example for local dev:
@@ -52,6 +59,7 @@ export MAX_FILE_SIZE_MB=100
 
 # frontend/.env
 VITE_MAX_FILE_SIZE_MB=100
+VITE_MAX_FILES=20
 ```
 
 ---

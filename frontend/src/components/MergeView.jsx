@@ -3,10 +3,12 @@ import DropZone from './DropZone';
 import FileList from './FileList';
 import PreviewModal from './PreviewModal';
 import { toDownloadFileName, DEFAULT_OUTPUT_NAME } from '../utils/downloadFileName';
-import { MAX_FILE_SIZE, maxFileSizeLabel } from '../config/limits';
+import { validatePdfFile } from '../utils/validatePdfFile';
+import { useUploadLimits } from '../hooks/useUploadLimits';
 import styles from './MergeView.module.css';
 
 export default function MergeView({ onMergingChange }) {
+  const { maxFileSize, maxFileSizeLabel, maxFiles } = useUploadLimits();
   const [files, setFiles] = useState([]);
   const [merging, setMerging] = useState(false);
   const [error, setError] = useState(null);
@@ -24,14 +26,16 @@ export default function MergeView({ onMergingChange }) {
     setSuccess(false);
     const validated = [];
     const errors = [];
+    let slotsLeft = maxFiles - files.length;
 
     for (const file of newFiles) {
-      if (file.type !== 'application/pdf') {
-        errors.push(`"${file.name}" — not a PDF file`);
+      const check = validatePdfFile(file, { maxFileSize, maxFileSizeLabel });
+      if (!check.ok) {
+        errors.push(check.error);
         continue;
       }
-      if (file.size > MAX_FILE_SIZE) {
-        errors.push(`"${file.name}" exceeds ${maxFileSizeLabel} limit`);
+      if (slotsLeft <= 0) {
+        errors.push(`Maximum ${maxFiles} files allowed`);
         continue;
       }
       validated.push({
@@ -40,6 +44,7 @@ export default function MergeView({ onMergingChange }) {
         name: file.name,
         size: file.size,
       });
+      slotsLeft -= 1;
     }
 
     if (errors.length > 0) {
@@ -51,7 +56,7 @@ export default function MergeView({ onMergingChange }) {
       const unique = validated.filter((f) => !existingNames.has(f.name));
       return [...prev, ...unique];
     });
-  }, []);
+  }, [files.length, maxFileSize, maxFileSizeLabel, maxFiles]);
 
   const removeFile = useCallback((id) => {
     setFiles((prev) => prev.filter((f) => f.id !== id));
@@ -206,7 +211,9 @@ export default function MergeView({ onMergingChange }) {
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📄</div>
           <p>Drop your PDF files above to get started</p>
-          <p className={styles.emptyHint}>Up to 20 files · Max {maxFileSizeLabel} each</p>
+          <p className={styles.emptyHint}>
+            Up to {maxFiles} files · Max {maxFileSizeLabel} each
+          </p>
         </div>
       )}
 
