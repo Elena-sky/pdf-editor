@@ -3,7 +3,9 @@ const MAX_FILES = 20;
 
 function parseMaxFileSizeMb() {
   const raw = process.env.MAX_FILE_SIZE_MB;
-  if (raw === undefined || raw === '') return DEFAULT_MAX_FILE_SIZE_MB;
+  if (raw === undefined || raw === '') {
+    return DEFAULT_MAX_FILE_SIZE_MB;
+  }
   const mb = Number(raw);
   if (!Number.isFinite(mb) || mb <= 0) {
     throw new Error(`Invalid MAX_FILE_SIZE_MB: ${raw}`);
