@@ -1,7 +1,9 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import DropZone from './DropZone';
 import PreviewModal from './PreviewModal';
+import { previewPdf, splitPdf } from '../api/pdf';
 import { toDownloadFileName, sanitizeStemForFileName } from '../utils/downloadFileName';
+import { triggerBlobDownload } from '../utils/triggerDownload';
 import { validatePdfFileExtract } from '../utils/validatePdfFile';
 import { useUploadLimits } from '../hooks/useUploadLimits';
 import styles from './ExtractView.module.css';
@@ -87,12 +89,7 @@ export default function ExtractView({ onExtractingChange }) {
     const fd = new FormData();
     fd.append('file', f);
     try {
-      const res = await fetch('/api/preview-pdf', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to read PDF');
-      }
-      const meta = await res.json();
+      const meta = await previewPdf(fd);
       setPageCount(meta.pageCount);
       setFrom(1);
       setTo(meta.pageCount);
@@ -135,22 +132,9 @@ export default function ExtractView({ onExtractingChange }) {
       fd.append('from', String(from));
       fd.append('to', String(to));
 
-      const res = await fetch('/api/split-pdf', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `Server error: ${res.status}`);
-      }
-
-      const blob = await res.blob();
+      const blob = await splitPdf(fd);
       const downloadName = toDownloadFileName(raw);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(blob, downloadName);
 
       setLastDownloadName(downloadName);
       setSuccess(true);

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { fetchConfig } from '../api/pdf';
 import { getBuildTimeUploadLimits, maxFileSizeLabelFromMb } from '../config/limits';
 import { UploadLimitsContext } from './uploadLimitsContext';
 
@@ -23,9 +24,7 @@ export function UploadLimitsProvider({ children }) {
 
     (async () => {
       try {
-        const res = await fetch('/api/config');
-        if (!res.ok) return;
-        const data = await res.json();
+        const data = await fetchConfig();
         if (
           cancelled ||
           !Number.isFinite(data.maxFileSizeMb) ||

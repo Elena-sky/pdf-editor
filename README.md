@@ -17,6 +17,8 @@ Web app to **merge** several PDFs into one or **extract** a page range from a si
 
 All routes are under the same host as the app in production; in local dev the Vite dev server proxies `/api` to the backend (default `http://localhost:3001`).
 
+The SPA calls the backend through [`frontend/src/api/`](frontend/src/api/) (`client.js` for URLs and error parsing, `pdf.js` for merge/preview/split/config). Set `VITE_API_BASE` (see [`.env.example`](.env.example)) when the API is on another origin without a reverse proxy; leave it empty to use relative `/api` paths.
+
 | Method & path | Body | Response |
 |---------------|------|----------|
 | `GET /api/config` | — | `200` — JSON: `maxFileSizeMb`, `maxFiles`, `acceptedMime` |

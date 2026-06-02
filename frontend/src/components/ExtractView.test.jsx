@@ -1,20 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import ExtractView from './ExtractView';
+import { previewPdf, splitPdf } from '../api/pdf';
+
+vi.mock('../api/pdf');
 
 const pdfFile = (name) =>
   new File([new ArrayBuffer(8)], name, { type: 'application/pdf' });
 
 describe('ExtractView', () => {
-  let fetchMock;
-
   beforeEach(() => {
-    fetchMock = vi.fn();
-    globalThis.fetch = fetchMock;
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    vi.mocked(previewPdf).mockReset();
+    vi.mocked(splitPdf).mockReset();
   });
 
   it('shows dropzone and empty state without a file', () => {
@@ -23,14 +20,10 @@ describe('ExtractView', () => {
   });
 
   it('after file drop and preview, shows page count and from/to defaults', async () => {
-    fetchMock.mockImplementation((url) => {
-      if (String(url).includes('preview-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ fileName: 'a.pdf', pageCount: 5, fileSize: 100 }),
-        });
-      }
-      return Promise.resolve({ ok: false });
+    vi.mocked(previewPdf).mockResolvedValue({
+      fileName: 'a.pdf',
+      pageCount: 5,
+      fileSize: 100,
     });
 
     render(<ExtractView />);
@@ -41,17 +34,14 @@ describe('ExtractView', () => {
     expect(await screen.findByText(/5 pages/)).toBeInTheDocument();
     expect(screen.getByLabelText('From')).toHaveValue(1);
     expect(screen.getByLabelText('To')).toHaveValue(5);
+    expect(previewPdf).toHaveBeenCalledOnce();
   });
 
   it('sets from to 0 and disables extract with range error', async () => {
-    fetchMock.mockImplementation((url) => {
-      if (String(url).includes('preview-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ fileName: 'a.pdf', pageCount: 5, fileSize: 100 }),
-        });
-      }
-      return Promise.resolve({ ok: false });
+    vi.mocked(previewPdf).mockResolvedValue({
+      fileName: 'a.pdf',
+      pageCount: 5,
+      fileSize: 100,
     });
 
     render(<ExtractView />);
@@ -67,23 +57,14 @@ describe('ExtractView', () => {
     ).toBeDisabled();
   });
 
-  it('calls split-pdf and shows success on extract', async () => {
+  it('calls splitPdf and shows success on extract', async () => {
     const blob = new Blob([new ArrayBuffer(4)], { type: 'application/pdf' });
-    fetchMock.mockImplementation((url) => {
-      if (String(url).includes('preview-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ fileName: 'a.pdf', pageCount: 3, fileSize: 100 }),
-        });
-      }
-      if (String(url).includes('split-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          blob: async () => blob,
-        });
-      }
-      return Promise.resolve({ ok: false });
+    vi.mocked(previewPdf).mockResolvedValue({
+      fileName: 'a.pdf',
+      pageCount: 3,
+      fileSize: 100,
     });
+    vi.mocked(splitPdf).mockResolvedValue(blob);
 
     const createElement = document.createElement.bind(document);
     const clickSpy = vi.fn();
@@ -108,23 +89,17 @@ describe('ExtractView', () => {
     );
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalled();
+      expect(splitPdf).toHaveBeenCalledOnce();
     });
-    const splitCalls = fetchMock.mock.calls.filter((c) => String(c[0]).includes('split-pdf'));
-    expect(splitCalls.length).toBeGreaterThan(0);
-    const splitBody = splitCalls[0][1].body;
-    expect(splitBody).toBeInstanceOf(FormData);
+    const formData = vi.mocked(splitPdf).mock.calls[0][0];
+    expect(formData).toBeInstanceOf(FormData);
   });
 
   it('updates output name with from/to when not manually edited', async () => {
-    fetchMock.mockImplementation((url) => {
-      if (String(url).includes('preview-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ fileName: 'a.pdf', pageCount: 5, fileSize: 100 }),
-        });
-      }
-      return Promise.resolve({ ok: false });
+    vi.mocked(previewPdf).mockResolvedValue({
+      fileName: 'a.pdf',
+      pageCount: 5,
+      fileSize: 100,
     });
 
     render(<ExtractView />);
@@ -143,14 +118,10 @@ describe('ExtractView', () => {
   });
 
   it('does not override manual output name when from/to change', async () => {
-    fetchMock.mockImplementation((url) => {
-      if (String(url).includes('preview-pdf')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ fileName: 'a.pdf', pageCount: 5, fileSize: 100 }),
-        });
-      }
-      return Promise.resolve({ ok: false });
+    vi.mocked(previewPdf).mockResolvedValue({
+      fileName: 'a.pdf',
+      pageCount: 5,
+      fileSize: 100,
     });
 
     render(<ExtractView />);

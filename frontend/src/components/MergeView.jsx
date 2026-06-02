@@ -2,7 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import DropZone from './DropZone';
 import FileList from './FileList';
 import PreviewModal from './PreviewModal';
+import { mergePdf } from '../api/pdf';
 import { toDownloadFileName, DEFAULT_OUTPUT_NAME } from '../utils/downloadFileName';
+import { triggerBlobDownload } from '../utils/triggerDownload';
 import { validatePdfFile } from '../utils/validatePdfFile';
 import { useUploadLimits } from '../hooks/useUploadLimits';
 import styles from './MergeView.module.css';
@@ -82,27 +84,9 @@ export default function MergeView({ onMergingChange }) {
       files.forEach((f) => formData.append('files', f.file));
       formData.append('order', files.map((_, i) => i).join(','));
 
-      const response = await fetch('/api/merge-pdf', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || `Server error: ${response.status}`);
-      }
-
-      const blob = await response.blob();
+      const blob = await mergePdf(formData);
       const downloadName = toDownloadFileName(outputFileName);
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = downloadName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
+      triggerBlobDownload(blob, downloadName);
 
       setLastDownloadName(downloadName);
       setSuccess(true);
