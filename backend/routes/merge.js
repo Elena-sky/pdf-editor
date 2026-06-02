@@ -1,6 +1,8 @@
 const express = require('express');
 const { PDFDocument } = require('pdf-lib');
 const { upload, MAX_FILES } = require('../middleware/upload');
+const { getContract } = require('../lib/contract');
+const { sendError } = require('../lib/sendError');
 
 const router = express.Router();
 
@@ -12,7 +14,7 @@ const router = express.Router();
 router.post('/merge-pdf', upload.array('files', MAX_FILES), async (req, res) => {
   try {
     if (!req.files || req.files.length < 2) {
-      return res.status(400).json({ error: 'Please upload at least 2 PDF files' });
+      return sendError(res, 400, 'Please upload at least 2 PDF files');
     }
 
     // Determine merge order (frontend sends comma-separated indices)
@@ -31,9 +33,11 @@ router.post('/merge-pdf', upload.array('files', MAX_FILES), async (req, res) => 
           ignoreEncryption: false,
         });
       } catch (e) {
-        return res.status(422).json({
-          error: `Failed to parse "${file.originalname}": ${e.message}. File may be corrupted or encrypted.`,
-        });
+        return sendError(
+          res,
+          422,
+          `Failed to parse "${file.originalname}": ${e.message}. File may be corrupted or encrypted.`,
+        );
       }
 
       const pages = await mergedPdf.copyPages(srcDoc, srcDoc.getPageIndices());
@@ -51,7 +55,7 @@ router.post('/merge-pdf', upload.array('files', MAX_FILES), async (req, res) => 
     res.send(Buffer.from(mergedBytes));
   } catch (err) {
     console.error('Merge error:', err);
-    res.status(500).json({ error: err.message || 'Failed to merge PDFs' });
+    return sendError(res, 500, err.message || 'Failed to merge PDFs');
   }
 });
 
@@ -63,18 +67,21 @@ router.post('/merge-pdf', upload.array('files', MAX_FILES), async (req, res) => 
 router.post('/preview-pdf', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
+      return sendError(res, 400, 'No file provided');
     }
 
     const doc = await PDFDocument.load(req.file.buffer, { ignoreEncryption: false });
+    const { PreviewMetaSchema } = await getContract();
 
-    res.json({
-      fileName: req.file.originalname,
-      pageCount: doc.getPageCount(),
-      fileSize: req.file.size,
-    });
+    res.json(
+      PreviewMetaSchema.parse({
+        fileName: req.file.originalname,
+        pageCount: doc.getPageCount(),
+        fileSize: req.file.size,
+      }),
+    );
   } catch (err) {
-    res.status(422).json({ error: `Invalid PDF: ${err.message}` });
+    return sendError(res, 422, `Invalid PDF: ${err.message}`);
   }
 });
 

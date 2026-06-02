@@ -25,6 +25,10 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package.json
 
+      - name: Install contract dependencies
+        run: npm ci
+        working-directory: shared/contract
+
       - name: Install dependencies
         run: npm install
 
@@ -32,7 +36,7 @@ jobs:
         run: npm run lint
 
       - name: Run tests
-        run: npm test
+        run: npm test && npm run test:security
 
   lint-frontend:
     name: Lint & Build Frontend
@@ -51,6 +55,10 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: frontend/package.json
+
+      - name: Install contract dependencies
+        run: npm ci
+        working-directory: shared/contract
 
       - name: Install dependencies
         run: npm install
@@ -79,13 +87,15 @@ jobs:
       - name: Build backend image
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: .
+          file: backend/Dockerfile
           push: false
           tags: pdf-editor-backend:ci
 
       - name: Build frontend image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: .
+          file: frontend/Dockerfile
           push: false
           tags: pdf-editor-frontend:ci
