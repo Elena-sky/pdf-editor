@@ -3,6 +3,10 @@ const { describe, test, before } = require('node:test');
 const request = require('supertest');
 const { PDFDocument } = require('pdf-lib');
 const app = require('./server');
+const {
+  MAX_FILE_SIZE_MB,
+  MAX_FILES,
+} = require('./config/limits');
 
 async function onePagePdf() {
   const doc = await PDFDocument.create();
@@ -32,6 +36,13 @@ describe('PDF Merger API', () => {
       status: 'ok',
       message: 'PDF Merger API is running',
     });
+  });
+
+  test('GET /api/config matches limits module', async () => {
+    const res = await request(app).get('/api/config').expect(200);
+    assert.strictEqual(res.body.maxFileSizeMb, MAX_FILE_SIZE_MB);
+    assert.strictEqual(res.body.maxFiles, MAX_FILES);
+    assert.strictEqual(res.body.acceptedMime, 'application/pdf');
   });
 
   test('POST /api/merge-pdf rejects fewer than 2 files', async () => {

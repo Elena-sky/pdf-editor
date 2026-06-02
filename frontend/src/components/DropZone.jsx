@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
-import { maxFileSizeLabel } from '../config/limits';
+import { useUploadLimits } from '../hooks/useUploadLimits';
 import styles from './DropZone.module.css';
 
 export default function DropZone({ onFiles, disabled, multiple = true, dropHint }) {
+  const { maxFileSizeLabel } = useUploadLimits();
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef(null);
   const dragCounter = useRef(0);
