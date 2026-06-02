@@ -22,9 +22,10 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'PDF Merger API is running' });
 });
 
-app.use((err, req, res, _next) => {
+app.use(async (err, req, res, _next) => {
   console.error(err.stack);
-  res.status(500).json({ error: err.message || 'Internal server error' });
+  const { sendError } = require('./lib/sendError');
+  await sendError(res, 500, err.message || 'Internal server error');
 });
 
 if (require.main === module) {

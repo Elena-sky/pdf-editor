@@ -25,14 +25,7 @@ export function UploadLimitsProvider({ children }) {
     (async () => {
       try {
         const data = await fetchConfig();
-        if (
-          cancelled ||
-          !Number.isFinite(data.maxFileSizeMb) ||
-          !Number.isInteger(data.maxFiles) ||
-          data.maxFiles <= 0
-        ) {
-          return;
-        }
+        if (cancelled) return;
         setLimits(limitsFromApi(data));
       } catch {
         // keep build-time defaults

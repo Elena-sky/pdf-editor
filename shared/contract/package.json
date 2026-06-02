@@ -1,0 +1,15 @@
+{
+  "name": "@pdf-editor/contract",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Shared Zod API contract for PDF Editor",
+  "exports": {
+    ".": "./index.js",
+    "./schemas": "./schemas.js",
+    "./openapi": "./openapi.js"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "zod": "^3.24.1"
+  }
+}

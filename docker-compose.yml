@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: pdf-editor-backend
     restart: unless-stopped
     environment:
@@ -20,8 +20,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
         MAX_FILE_SIZE_MB: 100
         VITE_MAX_FILE_SIZE_MB: 100

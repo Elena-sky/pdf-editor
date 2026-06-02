@@ -1,12 +1,12 @@
 FROM node:20-alpine
 
-WORKDIR /app
+WORKDIR /app/backend
 
-# Install dependencies first (better layer caching)
-COPY package*.json ./
+COPY shared/contract /app/shared/contract
+COPY backend/package*.json ./
 RUN npm install --omit=dev
 
-COPY . .
+COPY backend/ .
 
 EXPOSE 3001
 

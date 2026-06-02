@@ -45,6 +45,16 @@ describe('PDF Merger API', () => {
     assert.strictEqual(res.body.acceptedMime, 'application/pdf');
   });
 
+  test('GET /api/openapi.json returns OpenAPI 3 document', async () => {
+    const res = await request(app).get('/api/openapi.json').expect(200);
+    assert.strictEqual(res.body.openapi, '3.0.3');
+    assert.ok(res.body.paths['/config']);
+    assert.ok(res.body.paths['/merge-pdf']);
+    assert.ok(res.body.paths['/preview-pdf']);
+    assert.ok(res.body.paths['/split-pdf']);
+    assert.ok(res.body.components?.schemas?.UploadConfig);
+  });
+
   test('POST /api/merge-pdf rejects fewer than 2 files', async () => {
     const res = await request(app)
       .post('/api/merge-pdf')
@@ -149,7 +159,7 @@ describe('PDF Split API', () => {
       .field('to', '1')
       .attach('file', pdf5, 'p.pdf')
       .expect(400);
-    assert.strictEqual(res.body.error, '"from" and "to" must be integers');
+    assert.match(res.body.error, /from/i);
   });
 
   test('POST /api/split-pdf returns 422 for invalid PDF', async () => {

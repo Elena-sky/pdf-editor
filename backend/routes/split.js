@@ -1,6 +1,8 @@
 const express = require('express');
 const { PDFDocument } = require('pdf-lib');
 const { upload } = require('../middleware/upload');
+const { getContract } = require('../lib/contract');
+const { sendError, formatZodError } = require('../lib/sendError');
 
 const router = express.Router();
 
@@ -11,35 +13,37 @@ const router = express.Router();
 router.post('/split-pdf', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
+      return sendError(res, 400, 'No file provided');
     }
 
-    const from = parseInt(req.body.from, 10);
-    const to = parseInt(req.body.to, 10);
-
-    if (!Number.isInteger(from) || !Number.isInteger(to)) {
-      return res.status(400).json({ error: '"from" and "to" must be integers' });
+    const { SplitBodySchema } = await getContract();
+    const parsed = SplitBodySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return sendError(res, 400, formatZodError(parsed.error));
     }
+    const { from, to } = parsed.data;
 
     let srcDoc;
     try {
       srcDoc = await PDFDocument.load(req.file.buffer, { ignoreEncryption: false });
     } catch (e) {
-      return res.status(422).json({
-        error: `Failed to parse "${req.file.originalname}": ${e.message}`,
-      });
+      return sendError(
+        res,
+        422,
+        `Failed to parse "${req.file.originalname}": ${e.message}`,
+      );
     }
 
     const pageCount = srcDoc.getPageCount();
 
     if (from < 1 || from > pageCount) {
-      return res.status(400).json({ error: `"from" must be between 1 and ${pageCount}` });
+      return sendError(res, 400, `"from" must be between 1 and ${pageCount}`);
     }
     if (to < 1 || to > pageCount) {
-      return res.status(400).json({ error: `"to" must be between 1 and ${pageCount}` });
+      return sendError(res, 400, `"to" must be between 1 and ${pageCount}`);
     }
     if (from > to) {
-      return res.status(400).json({ error: '"from" must be ≤ "to"' });
+      return sendError(res, 400, '"from" must be ≤ "to"');
     }
 
     const outDoc = await PDFDocument.create();
@@ -61,7 +65,7 @@ router.post('/split-pdf', upload.single('file'), async (req, res) => {
     res.send(Buffer.from(bytes));
   } catch (err) {
     console.error('Split error:', err);
-    res.status(500).json({ error: err.message || 'Failed to split PDF' });
+    return sendError(res, 500, err.message || 'Failed to split PDF');
   }
 });
 

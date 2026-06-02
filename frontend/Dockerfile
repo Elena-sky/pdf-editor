@@ -6,12 +6,13 @@ ARG VITE_MAX_FILES=20
 ENV VITE_MAX_FILE_SIZE_MB=$VITE_MAX_FILE_SIZE_MB
 ENV VITE_MAX_FILES=$VITE_MAX_FILES
 
-WORKDIR /app
+WORKDIR /app/frontend
 
-COPY package*.json ./
+COPY shared/contract /app/shared/contract
+COPY frontend/package*.json ./
 RUN npm install
 
-COPY . .
+COPY frontend/ .
 RUN npm run build
 
 # ── Stage 2: serve via nginx ─────────────────────────────────────
@@ -26,10 +27,10 @@ RUN sed -i 's/\(application\/javascript[[:space:]]*\)js;$/\1js mjs;/' /etc/nginx
 # Remove default config
 RUN rm /etc/nginx/conf.d/default.conf
 
-COPY nginx.conf /tmp/nginx.conf
+COPY frontend/nginx.conf /tmp/nginx.conf
 RUN MAX_BODY_MB=$((MAX_FILE_SIZE_MB * MAX_FILES)) && \
     sed "s/__CLIENT_MAX_BODY_SIZE__/${MAX_BODY_MB}m/" /tmp/nginx.conf > /etc/nginx/conf.d/default.conf
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
 EXPOSE 80
 

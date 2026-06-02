@@ -28,7 +28,7 @@ The SPA calls the backend through [`frontend/src/api/`](frontend/src/api/) (`cli
 
 Error responses: `400` / `422` / `500` with JSON `{ "error": "message" }` where applicable.
 
-OpenAPI description: [`docs/openapi.yaml`](docs/openapi.yaml).
+OpenAPI (from Zod at runtime): `GET /api/openapi.json`.
 
 **Single source of truth:** the server enforces upload rules (multer + routes). The SPA reads `GET /api/config` at startup for UI labels and early client checks; build-time `VITE_*` env vars are the fallback if the config request fails.
 
