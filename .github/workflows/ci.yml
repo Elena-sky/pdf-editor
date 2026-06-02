@@ -25,6 +25,10 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package.json
 
+      - name: Install contract dependencies
+        run: npm ci
+        working-directory: shared/contract
+
       - name: Install dependencies
         run: npm install
 
