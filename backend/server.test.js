@@ -45,6 +45,17 @@ describe('PDF Merger API', () => {
     assert.strictEqual(res.body.acceptedMime, 'application/pdf');
   });
 
+  test('CORS allows configured dev origin', async () => {
+    const res = await request(app)
+      .get('/api/config')
+      .set('Origin', 'http://localhost:5173')
+      .expect(200);
+    assert.strictEqual(
+      res.headers['access-control-allow-origin'],
+      'http://localhost:5173',
+    );
+  });
+
   test('GET /api/openapi.json returns OpenAPI 3 document', async () => {
     const res = await request(app).get('/api/openapi.json').expect(200);
     assert.strictEqual(res.body.openapi, '3.0.3');

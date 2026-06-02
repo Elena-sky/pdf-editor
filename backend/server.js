@@ -3,24 +3,44 @@ const cors = require('cors');
 const mergeRouter = require('./routes/merge');
 const splitRouter = require('./routes/split');
 const configRouter = require('./routes/config');
+const { getCorsOptions } = require('./config/cors');
+const { apiRateLimiter, heavyRateLimiter } = require('./middleware/rateLimit');
+const { heavyRequestTimeout, haltOnTimedout } = require('./middleware/requestTimeout');
+const { heavyConcurrency } = require('./middleware/heavyConcurrency');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST'],
-}));
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+const corsOptions = getCorsOptions();
+if (corsOptions) {
+  app.use(cors(corsOptions));
+}
 
 app.use(express.json());
-
-app.use('/api', configRouter);
-app.use('/api', mergeRouter);
-app.use('/api', splitRouter);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'PDF Merger API is running' });
 });
+
+const heavyPipeline = [
+  heavyRateLimiter,
+  heavyRequestTimeout,
+  haltOnTimedout,
+  heavyConcurrency,
+];
+
+app.use('/api', apiRateLimiter);
+app.use('/api/merge-pdf', heavyPipeline);
+app.use('/api/split-pdf', heavyPipeline);
+app.use('/api/preview-pdf', heavyPipeline);
+
+app.use('/api', configRouter);
+app.use('/api', mergeRouter);
+app.use('/api', splitRouter);
 
 app.use(async (err, req, res, _next) => {
   console.error(err.stack);

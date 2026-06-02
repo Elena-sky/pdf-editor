@@ -1,75 +1,8 @@
-# PDF Editor (Merger + Extractor)
+# PDF Editor
 
-Web app to **merge** several PDFs into one or **extract** a page range from a single PDF. No account, no third-party cloud: files are processed for the request and are not kept on the server.
+Merge several PDFs into one file, or extract a page range from a single PDF. Files are processed per request and not stored on the server.
 
----
-
-## Features
-
-- **Merge** — drag and drop, reorder, preview pages, set output name, download one merged PDF  
-- **Extract** — one PDF, choose **From** / **To** (1-based, inclusive), optional output filename, download a new PDF with only those pages  
-- **Mode switch** in the header (Merge vs Extract) without losing the other mode’s in-memory state (both views stay mounted)  
-- **Only PDFs**, with size and count limits (see below)  
-
----
-
-## API (HTTP)
-
-All routes are under the same host as the app in production; in local dev the Vite dev server proxies `/api` to the backend (default `http://localhost:3001`).
-
-The SPA calls the backend through [`frontend/src/api/`](frontend/src/api/) (`client.js` for URLs and error parsing, `pdf.js` for merge/preview/split/config). Set `VITE_API_BASE` (see [`.env.example`](.env.example)) when the API is on another origin without a reverse proxy; leave it empty to use relative `/api` paths.
-
-| Method & path | Body | Response |
-|---------------|------|----------|
-| `GET /api/config` | — | `200` — JSON: `maxFileSizeMb`, `maxFiles`, `acceptedMime` |
-| `POST /api/merge-pdf` | `multipart/form-data`: `files` (2–20 PDFs), optional `order` (comma indices) | `200` — `application/pdf` |
-| `POST /api/preview-pdf` | `multipart/form-data`: `file` (one PDF) | `200` — JSON: `fileName`, `pageCount`, `fileSize` |
-| `POST /api/split-pdf` | `multipart/form-data`: `file` (one PDF), `from`, `to` (1-based inclusive integers) | `200` — `application/pdf` |
-
-Error responses: `400` / `422` / `500` with JSON `{ "error": "message" }` where applicable.
-
-OpenAPI (from Zod at runtime): `GET /api/openapi.json`.
-
-**Single source of truth:** the server enforces upload rules (multer + routes). The SPA reads `GET /api/config` at startup for UI labels and early client checks; build-time `VITE_*` env vars are the fallback if the config request fails.
-
----
-
-## Limitations
-
-- Does not open **password-protected** PDFs (and may return 422 for corrupt or encrypted files)  
-- **Up to 100 MB** per file (default; see configuration below)  
-- Merge: **up to 20 files** in one run  
-- Extract: **one file** per request (same per-file size limit)  
-
-### Configuration
-
-Per-file upload limit is controlled by one variable on each tier (keep values in sync):
-
-| Tier | Variable | Default |
-|------|----------|---------|
-| Backend | `MAX_FILE_SIZE_MB` | `100` |
-| Backend | (merge cap) | `MAX_FILES` = 20 in [`backend/config/limits.js`](backend/config/limits.js) |
-| Frontend (build fallback) | `VITE_MAX_FILE_SIZE_MB` | `100` |
-| Frontend (build fallback) | `VITE_MAX_FILES` | `20` |
-| Nginx (Docker build) | `MAX_FILE_SIZE_MB` build arg | `100` (`client_max_body_size` = per-file limit × 20 files) |
-
-Example for local dev:
-
-```bash
-# backend/.env or shell
-export MAX_FILE_SIZE_MB=100
-
-# frontend/.env
-VITE_MAX_FILE_SIZE_MB=100
-VITE_MAX_FILES=20
-```
-
----
-
-
-## Run the app (Docker)
-
-If you have [Docker](https://www.docker.com/) installed:
+## Run (Docker)
 
 ```bash
 git clone https://github.com/Elena-sky/pdf-editor.git
@@ -77,9 +10,41 @@ cd pdf-editor
 docker compose up --build
 ```
 
-Then open **http://localhost:3000** in your browser.
+Open **http://localhost:3000**.
 
----
+## Features
+
+- **Merge** — upload 2–20 PDFs, reorder, preview, download one file
+- **Extract** — one PDF, pick page range (From / To), download result
+- **Merge / Extract** toggle in the header without losing in-memory state
+
+## API
+
+In production, `/api` is same-origin (nginx → backend). In dev, Vite proxies `/api` to `http://localhost:3001`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/config` | Upload limits for the UI |
+| `POST` | `/api/merge-pdf` | Merge PDFs (`multipart/form-data`) |
+| `POST` | `/api/preview-pdf` | Page count for one file |
+| `POST` | `/api/split-pdf` | Extract pages (`from`, `to`) |
+| `GET` | `/api/openapi.json` | OpenAPI 3 (from Zod) |
+
+Errors: JSON `{ "error": "…" }` with `400`, `422`, `429`, `503`, or `500`.
+
+Separate API host in dev: set `VITE_API_BASE` and backend `CORS_ORIGIN` — see [`.env.example`](.env.example).
+
+## Limits
+
+- PDF only; no password-protected files
+- **100 MB** per file (default), **20 files** per merge
+- Backend enforces limits; the UI reads `/api/config` (with `VITE_*` as fallback)
+
+## Configuration
+
+Copy [`.env.example`](.env.example) for local env vars (`MAX_FILE_SIZE_MB`, `CORS_ORIGIN`, `VITE_API_BASE`, etc.).
+
+Docker sets `CORS_ORIGIN=` (empty) for same-origin. Rate limits and heavy-route timeouts use backend defaults; override via env in [`backend/config/security.js`](backend/config/security.js) if needed.
 
 ## License
 
