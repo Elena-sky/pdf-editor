@@ -8,9 +8,16 @@ ENV VITE_MAX_FILES=$VITE_MAX_FILES
 
 WORKDIR /app/frontend
 
+# Transient registry failures (ECONNRESET) on CI — npm retry settings
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000
+
 COPY shared/contract /app/shared/contract
+RUN npm ci --prefix /app/shared/contract
+
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY frontend/ .
 RUN npm run build
