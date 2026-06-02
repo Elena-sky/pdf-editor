@@ -15,14 +15,15 @@ Mirror [.github/workflows/ci.yml](.github/workflows/ci.yml) locally **before** s
 Execute in order; stop and fix on first failure.
 
 ```bash
-cd backend && npm install && npm run lint && npm test
+cd shared/contract && npm ci
+cd ../../backend && npm install && npm run lint && npm test && npm run test:security
 cd ../frontend && npm install && npm run lint && npm run build && npm test
 ```
 
 One-liner from repo root:
 
 ```bash
-(cd backend && npm run lint && npm test) && (cd frontend && npm run lint && npm run build && npm test)
+(cd shared/contract && npm ci) && (cd backend && npm run lint && npm test && npm run test:security) && (cd frontend && npm run lint && npm run build && npm test)
 ```
 
 ## What CI catches that is easy to miss locally
@@ -32,7 +33,8 @@ One-liner from repo root:
 | Single-line `if` without braces | `backend/**/*.js` | ESLint `curly` (error) |
 | React refresh / hook export warnings | `frontend` | ESLint `max-warnings 0` |
 | Broken production bundle | `frontend` | `npm run build` |
-| API regressions | `backend` | `node --test server.test.js` |
+| API regressions | `backend` | `server.test.js` + `security.test.js` |
+| Missing `zod` on Vite build | `frontend` | `shared/contract` deps + `zod` in frontend; run `npm ci` in `shared/contract` before frontend build |
 
 **Backend `curly`:** always use block bodies:
 

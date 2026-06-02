@@ -11,6 +11,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@pdf-editor/contract': path.resolve(__dirname, '../shared/contract'),
+      // contract is linked from source; bare imports must resolve via frontend node_modules
+      zod: path.resolve(__dirname, 'node_modules/zod'),
     },
   },
   test: {
