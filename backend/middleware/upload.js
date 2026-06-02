@@ -1,7 +1,5 @@
 const multer = require('multer');
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB per file
-const MAX_FILES = 20;
+const { MAX_FILE_SIZE, MAX_FILES } = require('../config/limits');
 
 const storage = multer.memoryStorage();
 

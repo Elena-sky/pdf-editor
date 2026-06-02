@@ -2,9 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import DropZone from './DropZone';
 import PreviewModal from './PreviewModal';
 import { toDownloadFileName, sanitizeStemForFileName } from '../utils/downloadFileName';
+import { MAX_FILE_SIZE, maxFileSizeLabel } from '../config/limits';
 import styles from './ExtractView.module.css';
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 function formatSize(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -66,7 +65,7 @@ export default function ExtractView({ onExtractingChange }) {
       return;
     }
     if (f.size > MAX_FILE_SIZE) {
-      setError('File exceeds 20MB');
+      setError(`File exceeds ${maxFileSizeLabel}`);
       return;
     }
 
@@ -299,7 +298,7 @@ export default function ExtractView({ onExtractingChange }) {
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📄</div>
           <p>Drop a PDF file to extract pages</p>
-          <p className={styles.emptyHint}>1 file · max 20 MB</p>
+          <p className={styles.emptyHint}>1 file · max {maxFileSizeLabel}</p>
         </div>
       )}
 

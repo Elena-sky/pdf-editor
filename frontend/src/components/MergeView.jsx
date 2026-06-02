@@ -3,9 +3,8 @@ import DropZone from './DropZone';
 import FileList from './FileList';
 import PreviewModal from './PreviewModal';
 import { toDownloadFileName, DEFAULT_OUTPUT_NAME } from '../utils/downloadFileName';
+import { MAX_FILE_SIZE, maxFileSizeLabel } from '../config/limits';
 import styles from './MergeView.module.css';
-
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 export default function MergeView({ onMergingChange }) {
   const [files, setFiles] = useState([]);
@@ -32,7 +31,7 @@ export default function MergeView({ onMergingChange }) {
         continue;
       }
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(`"${file.name}" exceeds 20MB limit`);
+        errors.push(`"${file.name}" exceeds ${maxFileSizeLabel} limit`);
         continue;
       }
       validated.push({
@@ -207,7 +206,7 @@ export default function MergeView({ onMergingChange }) {
         <div className={styles.emptyState}>
           <div className={styles.emptyIcon}>📄</div>
           <p>Drop your PDF files above to get started</p>
-          <p className={styles.emptyHint}>Up to 20 files · Max 20 MB each</p>
+          <p className={styles.emptyHint}>Up to 20 files · Max {maxFileSizeLabel} each</p>
         </div>
       )}
 

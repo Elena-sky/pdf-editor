@@ -30,11 +30,32 @@ Error responses: `400` / `422` / `500` with JSON `{ "error": "message" }` where 
 ## Limitations
 
 - Does not open **password-protected** PDFs (and may return 422 for corrupt or encrypted files)  
-- **Up to 20 MB** per file  
+- **Up to 100 MB** per file (default; see configuration below)  
 - Merge: **up to 20 files** in one run  
-- Extract: **one file** per request (same 20 MB limit)  
+- Extract: **one file** per request (same per-file size limit)  
+
+### Configuration
+
+Per-file upload limit is controlled by one variable on each tier (keep values in sync):
+
+| Tier | Variable | Default |
+|------|----------|---------|
+| Backend | `MAX_FILE_SIZE_MB` | `100` |
+| Frontend (build) | `VITE_MAX_FILE_SIZE_MB` | `100` |
+| Nginx (Docker build) | `MAX_FILE_SIZE_MB` build arg | `100` (`client_max_body_size` = per-file limit × 20 files) |
+
+Example for local dev:
+
+```bash
+# backend/.env or shell
+export MAX_FILE_SIZE_MB=100
+
+# frontend/.env
+VITE_MAX_FILE_SIZE_MB=100
+```
 
 ---
+
 
 ## Run the app (Docker)
 

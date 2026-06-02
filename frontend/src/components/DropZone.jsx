@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { maxFileSizeLabel } from '../config/limits';
 import styles from './DropZone.module.css';
 
 export default function DropZone({ onFiles, disabled, multiple = true, dropHint }) {
@@ -73,7 +74,7 @@ export default function DropZone({ onFiles, disabled, multiple = true, dropHint 
             : 'Drag & drop PDFs here'}
       </p>
       <p className={styles.sub}>or click to browse files</p>
-      <div className={styles.badge}>PDF only · max 20 MB each</div>
+      <div className={styles.badge}>PDF only · max {maxFileSizeLabel} each</div>
     </div>
   );
 }

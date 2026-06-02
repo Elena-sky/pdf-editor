@@ -8,6 +8,7 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=production
+      - MAX_FILE_SIZE_MB=100
     expose:
       - "3001"
     healthcheck:
@@ -21,6 +22,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        MAX_FILE_SIZE_MB: 100
+        VITE_MAX_FILE_SIZE_MB: 100
     container_name: pdf-editor-frontend
     restart: unless-stopped
     ports:
